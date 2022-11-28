@@ -149,7 +149,12 @@ int main(int argv, char *argc[]) {
 			}
 			// TODO: verification if the value is correct.
 			else if (!strcmp("-size", argc[i])) {
-				parameter.size = argc[i + 1];
+
+				if (argc[i][strlen(argc[i]) - 1] >= '0' && argc[i][strlen(argc[i] - 1)] <= '9')
+					parameter.size = strcat(argc[i + 1], "c");
+				else
+					parameter.size = argc[i + 1];
+
 				parameter.quantity++;
 			}
 			else if (!strcmp("-test", argc[i])) {
