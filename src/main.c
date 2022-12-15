@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,8 +6,11 @@
 #include <unistd.h>
 #include <dirent.h> 
 #include <stdbool.h>  
+#include <dirent.h>
+#include <ctype.h>
 
 #define FULL_SIZE_OF_PATH 100
+#define FULL_SIZE_OF_FILE 11
 
 typedef struct {
 	char* name;
@@ -14,12 +18,6 @@ typedef struct {
 	bool test;
 	int quantity;
 } Parameter;
-
-void print_spaces(int depth) {
-	for (int i = 0; i < depth; i++) {
-		printf("    ");
-	}
-}
 
 long int get_file_size(char *path, char *file) {
 	char full_name[FULL_SIZE_OF_PATH];
@@ -43,8 +41,6 @@ long int get_file_size(char *path, char *file) {
 }
 
 void print_file(char *path, char* file_name, int depth) {
-	long int size = get_file_size(path, file_name);
-
 	char name[FULL_SIZE_OF_PATH];
 	snprintf(name, FULL_SIZE_OF_PATH, "%s%s%s", path, "/",  file_name);
 
@@ -55,31 +51,42 @@ void print_file(char *path, char* file_name, int depth) {
 }
 
 void verify_if_can_be_printed(Parameter parameter, char *path, char *file_name, int depth) {
+	// Variable to verify if all the parameters have been used.
 	int successeful_parameters = 0;
 
+
+	// Verifies if the name of the current file is the same as defined at the flag.
 	if (parameter.name != NULL && strstr(file_name, parameter.name) != NULL) {
 		successeful_parameters++;
 	}
 
+	// Verifies if the file is in the range of the size flag.
 	if (parameter.size != NULL) {
 		long int size = get_file_size(path, file_name);
 
+		// Gets the multiplier that will be used to calculate the size of the file. For example, in case of 'k',
+		// the file needs to be '+' or '-' than 1024.
 		char unit = parameter.size[strlen(parameter.size) - 1];
 		int multiplier = unit == 'k' ? 1024 : unit == 'M' ? 1024 * 1024 : unit == 'G' ? 1024 * 1024 * 1024 : 1;
 
-		char threshold_as_string[FULL_SIZE_OF_PATH];
+		// Gets only the number in the -size flag.
+		char threshold_as_string[FULL_SIZE_OF_FILE];
 		strncpy(threshold_as_string, parameter.size + 1, strlen(parameter.size) - 2);
 		long int threshold = (long) atoi(threshold_as_string) * multiplier;
 
-		if (parameter.size[0] == '+') {
-			if (size >= threshold) {
-				successeful_parameters++;
-			}
-		} else {
-			if (size <= threshold) {
-				successeful_parameters++;
-			}
-		}
+		// In case the file in the range
+		if ((parameter.size[0] == '+' && size >= threshold) || (parameter.size[0] == '-' && size <= threshold))
+			successeful_parameters++;
+
+		// if (parameter.size[0] == '+') {
+		// 	if (size >= threshold) {
+		// 		successeful_parameters++;
+		// 	}
+		// } else {
+		// 	if (size <= threshold) {
+		// 		successeful_parameters++;
+		// 	}
+		// }
 	}
 
 	if (parameter.quantity == successeful_parameters)
@@ -125,7 +132,6 @@ int main(int argv, char *argc[]) {
 	}
 
 	if (argv >= 3) {
-
 		parameter.name = NULL;
 		parameter.test = false;
 		parameter.size = NULL;
@@ -139,7 +145,7 @@ int main(int argv, char *argc[]) {
 
 		for (int i = 2; i < argv; i += 2) {
 			if (argc[i][0] != '-') {
-				printf("Multiple parameters are not allowed, are you thing to use a flag? TIP: start with -\n");
+				printf("Multiple parameters are not allowed, are you trying to use a flag? TIP: start with -\n");
 				return 1;
 			}
 
@@ -147,13 +153,21 @@ int main(int argv, char *argc[]) {
 				parameter.name = argc[i + 1];
 				parameter.quantity++;
 			}
-			// TODO: verification if the value is correct.
+			// TODO: verification if the value is correct. Is it possible to go over the size of the int?
 			else if (!strcmp("-size", argc[i])) {
+				// char size[FULL_SIZE_OF_FILE] = "";
 
-				if (argc[i][strlen(argc[i]) - 1] >= '0' && argc[i][strlen(argc[i] - 1)] <= '9')
-					parameter.size = strcat(argc[i + 1], "c");
-				else
-					parameter.size = argc[i + 1];
+				// Verifying if the parameter starts with + or -
+				if (argc[i + 1][0] != '+' && argc[i + 1][0] != '-') {
+					// printf("Missing + or - in the -size flag.\n");
+					return 1;
+				}
+
+				// In case the last character is missing, an c needs to be placed.
+				if (isdigit(argc[i + 1][strlen(argc[i+1]) - 1]))
+					strcat(argc[i + 1], "c");
+
+				parameter.size = argc[i + 1];
 
 				parameter.quantity++;
 			}
