@@ -7,7 +7,6 @@
 			"command": "",
 			"args": [
 				"make",
-                "debug",
                 "--directory=${workspaceFolder}"
 			],
 			"options": {
