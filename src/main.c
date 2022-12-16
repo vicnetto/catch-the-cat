@@ -71,22 +71,16 @@ void verify_if_can_be_printed(Parameter parameter, char *path, char *file_name, 
 
 		// Gets only the number in the -size flag.
 		char threshold_as_string[FULL_SIZE_OF_FILE];
-		strncpy(threshold_as_string, parameter.size + 1, strlen(parameter.size) - 2);
-		long int threshold = (long) atoi(threshold_as_string) * multiplier;
+		strncpy(threshold_as_string, parameter.size + !isdigit(parameter.size[0]), strlen(parameter.size) - (1 + !isdigit(parameter.size[0])));
 
+		long int threshold = (long) atoi(threshold_as_string) * multiplier;
+		
 		// In case the file in the range
-		if ((parameter.size[0] == '+' && size >= threshold) || (parameter.size[0] == '-' && size <= threshold))
+		if ((parameter.size[0] == '+'    && size > threshold) || 
+			(parameter.size[0] == '-'    && size < threshold) ||
+			(isdigit(parameter.size[0])  && size == threshold))
 			successeful_parameters++;
 
-		// if (parameter.size[0] == '+') {
-		// 	if (size >= threshold) {
-		// 		successeful_parameters++;
-		// 	}
-		// } else {
-		// 	if (size <= threshold) {
-		// 		successeful_parameters++;
-		// 	}
-		// }
 	}
 
 	if (parameter.quantity == successeful_parameters)
@@ -155,19 +149,21 @@ int main(int argv, char *argc[]) {
 			}
 			// TODO: verification if the value is correct. Is it possible to go over the size of the int?
 			else if (!strcmp("-size", argc[i])) {
-				// char size[FULL_SIZE_OF_FILE] = "";
-
-				// Verifying if the parameter starts with + or -
-				if (argc[i + 1][0] != '+' && argc[i + 1][0] != '-') {
-					// printf("Missing + or - in the -size flag.\n");
-					return 1;
-				}
-
 				// In case the last character is missing, an c needs to be placed.
-				if (isdigit(argc[i + 1][strlen(argc[i+1]) - 1]))
+				if (isdigit(argc[i + 1][strlen(argc[i + 1]) - 1]))
 					strcat(argc[i + 1], "c");
 
 				parameter.size = argc[i + 1];
+
+				if (isdigit(argc[i + 1][0])) {
+					char number[FULL_SIZE_OF_FILE] = "";
+					strncpy(number, parameter.size + !isdigit(argc[i + 1][0]), strlen(parameter.size) - (1 + !isdigit(argc[i + 1][0])));
+
+					if (!atoi(number)) {
+						printf("Invalid number for the flag -size. Please try in the format: {+,-, }number{k,G,M}\n");
+						return 1;
+					}
+				}
 
 				parameter.quantity++;
 			}
