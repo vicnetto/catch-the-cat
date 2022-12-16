@@ -1,5 +1,6 @@
 #define _DEFAULT_SOURCE
 #include <stdio.h>
+#include <magic.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -10,13 +11,17 @@
 #include <ctype.h>
 #include <regex.h>
 
-#define FULL_SIZE_OF_PATH 100
+#define FULL_SIZE_OF_PATH 1000
 #define FULL_SIZE_OF_FILE 11
 #define FULL_SIZE_OF_NAME 100
+#define FULL_SIZE_OF_TYPE 100
+
+magic_t magic;
 
 typedef struct {
 	char* name;
 	char* size;
+	char* mime;
 	bool test;
 	int quantity;
 } Parameter;
@@ -76,6 +81,23 @@ void verify_if_can_be_printed(Parameter parameter, char *path, char *file_name, 
 					successeful_parameters++;
 			}
 		}
+	}
+
+	if (parameter.mime != NULL) {
+		const char *typeSubType;
+		char test[FULL_SIZE_OF_PATH];
+		snprintf(test, FULL_SIZE_OF_PATH, "%s%s%s", path, "/", file_name);
+
+		typeSubType = magic_file(magic, test);
+
+		char type[FULL_SIZE_OF_TYPE];
+
+		int endType = strchr(typeSubType, '/') - typeSubType;
+		strncpy(type, typeSubType, endType);
+		type[endType] = '\0';
+
+		if (!strcmp(type, parameter.mime) || !strcmp(typeSubType, parameter.mime))
+			successeful_parameters++;
 	}
 
 	// Verifies if the file is in the range of the size flag.
@@ -138,6 +160,9 @@ int main(int argv, char *argc[]) {
 	FILE* file;
 	Parameter parameter;
 
+	magic = magic_open(MAGIC_MIME_TYPE);
+	magic_load(magic, NULL);
+
 	if (argv < 2) {
 		printf("The path needs to be specified!\n");
 		return 1;
@@ -145,8 +170,9 @@ int main(int argv, char *argc[]) {
 
 	if (argv >= 3) {
 		parameter.name = NULL;
-		parameter.test = false;
 		parameter.size = NULL;
+		parameter.mime = NULL;
+		parameter.test = false;
 		parameter.quantity = 0;
 
 		for (int i = 2; i < argv; i += 2) {
@@ -184,6 +210,10 @@ int main(int argv, char *argc[]) {
 
 				parameter.quantity++;
 			}
+			else if (!strcmp("-mime", argc[i])) {
+				parameter.mime = argc[i + 1];
+				parameter.quantity++;
+			}
 			else if (!strcmp("-test", argc[i])) {
 				i--;
 				continue;
@@ -199,6 +229,8 @@ int main(int argv, char *argc[]) {
 	}
 
 	show_files_in_specific_path(0, argc[1], parameter);
+
+	magic_close(magic);
 
 	return 0;
 }
