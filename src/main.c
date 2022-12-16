@@ -8,9 +8,11 @@
 #include <stdbool.h>  
 #include <dirent.h>
 #include <ctype.h>
+#include <regex.h>
 
 #define FULL_SIZE_OF_PATH 100
 #define FULL_SIZE_OF_FILE 11
+#define FULL_SIZE_OF_NAME 100
 
 typedef struct {
 	char* name;
@@ -54,10 +56,26 @@ void verify_if_can_be_printed(Parameter parameter, char *path, char *file_name, 
 	// Variable to verify if all the parameters have been used.
 	int successeful_parameters = 0;
 
-
 	// Verifies if the name of the current file is the same as defined at the flag.
-	if (parameter.name != NULL && strstr(file_name, parameter.name) != NULL) {
-		successeful_parameters++;
+	if (parameter.name != NULL) {
+		// Verifing if the name is contained on the file name.
+		if (strcmp(file_name, parameter.name) == 0)
+			successeful_parameters++;
+		else {
+			// Or trying the regex.
+			regex_t regex;
+			size_t nmatch = 2;
+			regmatch_t pmatch[2];
+
+			regcomp(&regex, parameter.name, 0);
+ 
+			// Testing if the regex can be finded in the file name, and it returs 0 if true.
+    		if (0 == regexec(&regex, file_name, nmatch, pmatch, 0)) {
+				// In case of match, this line verifies if the match matches all the file_name.
+				if (pmatch[0].rm_so == 0 && pmatch[0].rm_eo == strlen(file_name))
+					successeful_parameters++;
+			}
+		}
 	}
 
 	// Verifies if the file is in the range of the size flag.
@@ -147,7 +165,6 @@ int main(int argv, char *argc[]) {
 				parameter.name = argc[i + 1];
 				parameter.quantity++;
 			}
-			// TODO: verification if the value is correct. Is it possible to go over the size of the int?
 			else if (!strcmp("-size", argc[i])) {
 				// In case the last character is missing, an c needs to be placed.
 				if (isdigit(argc[i + 1][strlen(argc[i + 1]) - 1]))
