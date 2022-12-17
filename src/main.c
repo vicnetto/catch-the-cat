@@ -1,6 +1,5 @@
 #define _DEFAULT_SOURCE
 #include <stdio.h>
-#include <magic.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -10,13 +9,12 @@
 #include <dirent.h>
 #include <ctype.h>
 #include <regex.h>
+#include "lib/MegaMimes.h"
 
-#define FULL_SIZE_OF_PATH 1000
+#define FULL_SIZE_OF_PATH 500
 #define FULL_SIZE_OF_FILE 11
 #define FULL_SIZE_OF_NAME 100
 #define FULL_SIZE_OF_TYPE 100
-
-magic_t magic;
 
 typedef struct {
 	char* name;
@@ -25,6 +23,8 @@ typedef struct {
 	bool test;
 	int quantity;
 } Parameter;
+
+int i;
 
 long int get_file_size(char *path, char *file) {
 	char full_name[FULL_SIZE_OF_PATH];
@@ -84,20 +84,23 @@ void verify_if_can_be_printed(Parameter parameter, char *path, char *file_name, 
 	}
 
 	if (parameter.mime != NULL) {
-		const char *typeSubType;
+
 		char test[FULL_SIZE_OF_PATH];
 		snprintf(test, FULL_SIZE_OF_PATH, "%s%s%s", path, "/", file_name);
 
-		typeSubType = magic_file(magic, test);
+		if (getMegaMimeType(test) != NULL) {
+			char typeSubType[FULL_SIZE_OF_PATH];
+			char type[FULL_SIZE_OF_PATH];
+			strcpy(typeSubType, getMegaMimeType(test));
 
-		char type[FULL_SIZE_OF_TYPE];
+			int endType = strchr(typeSubType, '/') - typeSubType;
+			strncpy(type, typeSubType, endType);
+			type[endType] = '\0';
 
-		int endType = strchr(typeSubType, '/') - typeSubType;
-		strncpy(type, typeSubType, endType);
-		type[endType] = '\0';
+			if (!strcmp(type, parameter.mime) || !strcmp(typeSubType, parameter.mime))
+				successeful_parameters++;
+		}
 
-		if (!strcmp(type, parameter.mime) || !strcmp(typeSubType, parameter.mime))
-			successeful_parameters++;
 	}
 
 	// Verifies if the file is in the range of the size flag.
@@ -157,13 +160,9 @@ int show_files_in_specific_path(int depth, char *path, Parameter parameter) {
 
 // Verify if the first parameter is a file
 int main(int argv, char *argc[]) {
-	FILE* file;
 	Parameter parameter;
 
-	magic = magic_open(MAGIC_MIME_TYPE);
-	magic_load(magic, NULL);
-
-	if (argv < 2) {
+	if (argv < 3) {
 		printf("The path needs to be specified!\n");
 		return 1;
 	}
@@ -229,8 +228,6 @@ int main(int argv, char *argc[]) {
 	}
 
 	show_files_in_specific_path(0, argc[1], parameter);
-
-	magic_close(magic);
 
 	return 0;
 }
