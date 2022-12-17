@@ -6,9 +6,7 @@ ARCHIVESdotO=obj/main.o obj/MegaMimes.o
 
 all: create_object_directory ftc
 
-all: create_object_dir ftc
-
-create_object_dir: 
+create_object_directory: 
 	mkdir -p obj
 
 ftc: $(ARCHIVESdotO)
