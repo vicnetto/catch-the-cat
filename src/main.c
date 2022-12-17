@@ -21,6 +21,7 @@ typedef struct {
 	char* size;
 	char* mime;
 	char* ctc;
+	char* dir;
 	bool test;
 	int quantity;
 } Parameter;
@@ -49,8 +50,19 @@ void print_file(char *full_path, int depth) {
 	printf("%s\n", full_path);
 }
 
-bool evaluate_regex(regex_t regex, char *value) {
-	return 0 == regexec(&regex, value, 0, NULL, 0);
+bool evaluate_regex_perfect_match(char *expression, char *file_name) {
+	// Or trying the regex.
+	regex_t regex;
+	size_t nmatch = 2;
+	regmatch_t pmatch[2];
+
+	regcomp(&regex, expression, 0);
+
+	// Testing if the regex can be finded in the file name, and it returs 0 if true.
+	if (0 == regexec(&regex, file_name, nmatch, pmatch, 0))
+		return pmatch[0].rm_so == 0 && pmatch[0].rm_eo == strlen(file_name);
+	else
+		return 0;
 }
 
 void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_name, int depth) {
@@ -63,19 +75,8 @@ void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_n
 		if (strcmp(file_name, parameter.name) == 0)
 			successeful_parameters++;
 		else {
-			// Or trying the regex.
-			regex_t regex;
-			size_t nmatch = 2;
-			regmatch_t pmatch[2];
-
-			regcomp(&regex, parameter.name, 0);
- 
-			// Testing if the regex can be finded in the file name, and it returs 0 if true.
-    		if (0 == regexec(&regex, file_name, nmatch, pmatch, 0)) {
-				// In case of match, this line verifies if the match matches all the file_name.
-				if (pmatch[0].rm_so == 0 && pmatch[0].rm_eo == strlen(file_name))
-					successeful_parameters++;
-			}
+			if (evaluate_regex_perfect_match(parameter.name, file_name))
+				successeful_parameters++;
 		}
 	}
 
@@ -162,9 +163,16 @@ int show_files_in_specific_path(int depth, char *path, Parameter parameter) {
 
 			// Print file.
 			if (dir->d_type == DT_REG) {
-				verify_if_can_be_printed(parameter, full_path, dir->d_name, depth);
+				if (parameter.dir == NULL) 
+					verify_if_can_be_printed(parameter, full_path, dir->d_name, depth);
 			} else {
 				// Print directory.
+				if (parameter.dir == "") {
+					printf("%s\n", full_path);
+				} else if (parameter.dir != NULL && evaluate_regex_perfect_match(parameter.dir, dir->d_name)) {
+					printf("%s\n", full_path);
+				}
+
 				if (strcmp("..", dir->d_name) && strcmp(".", dir->d_name)) {
 					show_files_in_specific_path(depth + 1, full_path, parameter);
 				}
@@ -190,6 +198,7 @@ int main(int argv, char *argc[]) {
 		parameter.name = NULL;
 		parameter.size = NULL;
 		parameter.mime = NULL;
+		parameter.dir = NULL;
 		parameter.ctc = NULL;
 		parameter.test = false;
 		parameter.quantity = 0;
@@ -236,6 +245,12 @@ int main(int argv, char *argc[]) {
 			else if (!strcmp("-ctc", argc[i])) {
 				parameter.ctc = argc[i + 1];
 				parameter.quantity++;
+			}
+			else if (!strcmp("-dir", argc[i])) {
+				if (argc[i + 1][0] != '-')
+					parameter.dir = argc[i + 1];
+				else
+					parameter.dir = "";
 			}
 			else if (!strcmp("-test", argc[i])) {
 				i--;
