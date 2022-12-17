@@ -101,22 +101,24 @@ void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_n
 		regex_t regex;
 		regcomp(&regex, parameter.ctc, 0);
 
-		if (0 == regexec(&regex, fp, 0, NULL, 0))
-			printf("Nem morto!\n");
+		if (fp != NULL) {
+			int test = fseek(fp, 0, SEEK_END);
 
-		char x[1024];
-		/* assumes no word exceeds length of 1023 */
-		while (!feof(fp)) {
-			fscanf(fp,"%1023s", x);
+			if (test >= 0) {
+				long size = ftell(fp);
+				fseek(fp, 0, SEEK_SET);
 
-			if(evaluate_regex(regex, x)) {
-				successeful_parameters++;
-				x[0] = '\0';
-				break;
+				char buffer[size + 1];
+
+				fread(buffer, size, 1, fp);
+				buffer[size] = '\0';
+
+				if (0 == regexec(&regex, buffer, 0, NULL, 0))
+					successeful_parameters++;
 			}
-		}
 
-		fclose(fp);
+			fclose(fp);
+		}
 	}
 
 	// Verifies if the file is in the range of the size flag.
