@@ -20,17 +20,15 @@ typedef struct {
 	char* name;
 	char* size;
 	char* mime;
+	char* ctc;
 	bool test;
 	int quantity;
 } Parameter;
 
 int i;
 
-long int get_file_size(char *path, char *file) {
-	char full_name[FULL_SIZE_OF_PATH];
-	snprintf(full_name, FULL_SIZE_OF_PATH, "%s%s%s", path, "/",  file);
-
-	FILE *fp = fopen(full_name, "ra");
+long int get_file_size(char *full_path) {
+	FILE *fp = fopen(full_path, "ra");
 
 	if (fp == NULL)
 		return -1;
@@ -47,17 +45,11 @@ long int get_file_size(char *path, char *file) {
 	return size;
 }
 
-void print_file(char *path, char* file_name, int depth) {
-	char name[FULL_SIZE_OF_PATH];
-	snprintf(name, FULL_SIZE_OF_PATH, "%s%s%s", path, "/",  file_name);
-
-	// print_spaces(depth);
-
-	// printf("* (%d) %s\n", size, name);
-	printf("%s\n", name);
+void print_file(char *full_path, int depth) {
+	printf("%s\n", full_path);
 }
 
-void verify_if_can_be_printed(Parameter parameter, char *path, char *file_name, int depth) {
+void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_name, int depth) {
 	// Variable to verify if all the parameters have been used.
 	int successeful_parameters = 0;
 
@@ -84,14 +76,10 @@ void verify_if_can_be_printed(Parameter parameter, char *path, char *file_name, 
 	}
 
 	if (parameter.mime != NULL) {
-
-		char test[FULL_SIZE_OF_PATH];
-		snprintf(test, FULL_SIZE_OF_PATH, "%s%s%s", path, "/", file_name);
-
-		if (getMegaMimeType(test) != NULL) {
+		if (getMegaMimeType(full_path) != NULL) {
 			char typeSubType[FULL_SIZE_OF_PATH];
 			char type[FULL_SIZE_OF_PATH];
-			strcpy(typeSubType, getMegaMimeType(test));
+			strcpy(typeSubType, getMegaMimeType(full_path));
 
 			int endType = strchr(typeSubType, '/') - typeSubType;
 			strncpy(type, typeSubType, endType);
@@ -103,9 +91,21 @@ void verify_if_can_be_printed(Parameter parameter, char *path, char *file_name, 
 
 	}
 
+	if (parameter.ctc != NULL) {
+		FILE *fp = fopen(full_path, "r");
+
+		char x[1024];
+		/* assumes no word exceeds length of 1023 */
+		while (fscanf(fp, " %1023s", x) == 1) {
+			printf("Test: %s", x);
+		}
+
+		fclose(fp);
+	}
+
 	// Verifies if the file is in the range of the size flag.
 	if (parameter.size != NULL) {
-		long int size = get_file_size(path, file_name);
+		long int size = get_file_size(full_path);
 
 		// Gets the multiplier that will be used to calculate the size of the file. For example, in case of 'k',
 		// the file needs to be '+' or '-' than 1024.
@@ -127,7 +127,7 @@ void verify_if_can_be_printed(Parameter parameter, char *path, char *file_name, 
 	}
 
 	if (parameter.quantity == successeful_parameters)
-		print_file(path, file_name, depth);
+		print_file(full_path, depth);
 
 }
 
@@ -139,23 +139,21 @@ int show_files_in_specific_path(int depth, char *path, Parameter parameter) {
 
 	if (d) {
 		while ((dir = readdir(d)) != NULL) {
+			char full_path[FULL_SIZE_OF_PATH];
+			snprintf(full_path, FULL_SIZE_OF_PATH, "%s%s%s", path, path[strlen(path) - 1] == '/' ? "" : "/",  dir->d_name);
+
 			// Print file.
 			if (dir->d_type == DT_REG) {
-				verify_if_can_be_printed(parameter, path, dir->d_name, depth);
+				verify_if_can_be_printed(parameter, full_path, dir->d_name, depth);
 			} else {
 				// Print directory.
 				if (strcmp("..", dir->d_name) && strcmp(".", dir->d_name)) {
-					char name[FULL_SIZE_OF_PATH];
-					snprintf(name, FULL_SIZE_OF_PATH, "%s%s%s", path, "/",  dir->d_name);
-
-					show_files_in_specific_path(depth + 1, name, parameter);
+					show_files_in_specific_path(depth + 1, full_path, parameter);
 				}
 			}
 		}
 
 		closedir(d);
-	} else {
-		printf("Does not exist!");
 	}
 
 	return 0;
@@ -174,6 +172,7 @@ int main(int argv, char *argc[]) {
 		parameter.name = NULL;
 		parameter.size = NULL;
 		parameter.mime = NULL;
+		parameter.ctc = NULL;
 		parameter.test = false;
 		parameter.quantity = 0;
 
@@ -216,6 +215,10 @@ int main(int argv, char *argc[]) {
 				parameter.mime = argc[i + 1];
 				parameter.quantity++;
 			}
+			else if (!strcmp("-ctc", argc[i])) {
+				parameter.ctc = argc[i + 1];
+				parameter.quantity++;
+			}
 			else if (!strcmp("-test", argc[i])) {
 				i--;
 				continue;
@@ -232,10 +235,9 @@ int main(int argv, char *argc[]) {
 
 	char cleanPath[FULL_SIZE_OF_PATH];
 	bool isSlash = false;
-	int pathLen = strlen(argc[1]);
 	int iCleanPath = 0;
 	for (int i = 0; argc[1][i] != '\0'; i++) {
-		if (argc[1][i] == '/' && (!isSlash && pathLen - 1 != i)) {
+		if (argc[1][i] == '/' && !isSlash) {
 			isSlash = true;
 
 			cleanPath[iCleanPath] = '/';
@@ -247,6 +249,10 @@ int main(int argv, char *argc[]) {
 			iCleanPath++;
 		} 
 	}
+
+	// Verifies if the path is already finishing with the slash.
+	if (cleanPath[iCleanPath - 1] != '/')
+		cleanPath[iCleanPath] = '/';
 
 	show_files_in_specific_path(0, cleanPath, parameter);
 
