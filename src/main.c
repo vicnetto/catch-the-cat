@@ -168,9 +168,13 @@ int show_files_in_specific_path(int depth, char *path, Parameter parameter) {
 			} else {
 				// Print directory.
 				if (strcmp("..", dir->d_name) && strcmp(".", dir->d_name)) {
-					if (!strcmp(parameter.dir, "") || parameter.quantity == 0) {
-						printf("%s\n", full_path);
-					} else if (parameter.dir != NULL && evaluate_regex_perfect_match(parameter.dir, dir->d_name)) {
+					if (parameter.dir != NULL) {
+						if (!strcmp(parameter.dir, "")) {
+							printf("%s\n", full_path);
+						} else if (evaluate_regex_perfect_match(parameter.dir, dir->d_name)) {
+							printf("%s\n", full_path);
+						}
+					} else if (parameter.quantity == 0) {
 						printf("%s\n", full_path);
 					}
 
@@ -252,7 +256,6 @@ int main(int argv, char *argc[]) {
 					parameter.dir = "";
 					i--;
 				}
-
 				parameter.quantity++;
 			}
 			else if (!strcmp("-test", argc[i])) {
