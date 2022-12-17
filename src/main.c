@@ -49,6 +49,10 @@ void print_file(char *full_path, int depth) {
 	printf("%s\n", full_path);
 }
 
+bool evaluate_regex(regex_t regex, char *value) {
+	return 0 == regexec(&regex, value, 0, NULL, 0);
+}
+
 void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_name, int depth) {
 	// Variable to verify if all the parameters have been used.
 	int successeful_parameters = 0;
@@ -94,10 +98,22 @@ void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_n
 	if (parameter.ctc != NULL) {
 		FILE *fp = fopen(full_path, "r");
 
+		regex_t regex;
+		regcomp(&regex, parameter.ctc, 0);
+
+		if (0 == regexec(&regex, fp, 0, NULL, 0))
+			printf("Nem morto!\n");
+
 		char x[1024];
 		/* assumes no word exceeds length of 1023 */
-		while (fscanf(fp, " %1023s", x) == 1) {
-			printf("Test: %s", x);
+		while (!feof(fp)) {
+			fscanf(fp,"%1023s", x);
+
+			if(evaluate_regex(regex, x)) {
+				successeful_parameters++;
+				x[0] = '\0';
+				break;
+			}
 		}
 
 		fclose(fp);
@@ -251,8 +267,11 @@ int main(int argv, char *argc[]) {
 	}
 
 	// Verifies if the path is already finishing with the slash.
-	if (cleanPath[iCleanPath - 1] != '/')
-		cleanPath[iCleanPath] = '/';
+	if (cleanPath[iCleanPath - 1] != '/') {
+		cleanPath[iCleanPath++] = '/';
+	}
+
+	cleanPath[iCleanPath] = '\0';
 
 	show_files_in_specific_path(0, cleanPath, parameter);
 
