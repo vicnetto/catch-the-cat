@@ -6,12 +6,15 @@ INCLUDE=-lmagic
 
 ARCHIVESdotO=obj/main.o
 
-all: ftc
+all: create_object_dir ftc
+
+create_object_dir: 
+	mkdir -p obj
 
 ftc: $(ARCHIVESdotO)
 	$(CC) $(ARCHIVESdotO) -o ftc $(INCLUDE)
 
-main.o: src/main.c
+obj/main.o: src/main.c
 	$(CC) $(CFLAGS) -o obj/main.o -c src/main.c -I $(INCLUDE)
 
 # MegaMimes.o: src/lib/MegaMimes.c
