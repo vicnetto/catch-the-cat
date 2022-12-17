@@ -8,6 +8,7 @@
 #include <stdbool.h>  
 #include <dirent.h>
 #include <ctype.h>
+#include <time.h>
 
 #define FULL_SIZE_OF_PATH 100
 #define FULL_SIZE_OF_FILE 11
@@ -15,6 +16,7 @@
 typedef struct {
 	char* name;
 	char* size;
+	char* date;
 	bool test;
 	int quantity;
 } Parameter;
@@ -38,6 +40,17 @@ long int get_file_size(char *path, char *file) {
 	
 	fclose(fp);
 	return size;
+}
+
+time_t get_file_last_access(char *path, char *file) {
+	char full_name[FULL_SIZE_OF_PATH];
+	snprintf(full_name, FULL_SIZE_OF_PATH, "%s%s%s", path, "/", file);
+
+	struct stat filestat;
+
+	stat(full_name, &filestat);
+
+	return &filestat.st_atim;
 }
 
 void print_file(char *path, char* file_name, int depth) {
@@ -87,6 +100,41 @@ void verify_if_can_be_printed(Parameter parameter, char *path, char *file_name, 
 		// 		successeful_parameters++;
 		// 	}
 		// }
+	}
+
+	if (parameter.date != NULL) {
+		time_t now = time(0);
+
+		time_t last_access = get_file_last_access(path, file_name);
+		
+		char unit = parameter.date[strlen(parameter.date) - 1];
+		int multiplier = unit == 'm' ? 60 : unit == 'h' ? 3600 : unit == 'j' ? 3600*24 : 60;
+
+		time_t wanted_delay;
+
+		if (parameter.date[0] == '+') {
+			char number[strlen(parameter.date) - 2];
+			memcpy(number, parameter.date + 1, strlen(parameter.date) - 1);
+			wanted_delay = multiplier * atoi(number);
+		}
+		else {
+			char number[strlen(parameter.date) - 1];
+			memcpy(number, parameter.date, strlen(parameter.date) - 1);
+			wanted_delay = multiplier * atoi(number);
+		}
+
+		time_t delay = now - last_access;
+
+		if (parameter.date[0] == '+') {
+			if (delay > wanted_delay) {
+				successeful_parameters++;
+			}
+		}
+		else {
+			if (delay < wanted_delay) {
+				successeful_parameters++;
+			}
+		}
 	}
 
 	if (parameter.quantity == successeful_parameters)
@@ -174,6 +222,20 @@ int main(int argv, char *argc[]) {
 			else if (!strcmp("-test", argc[i])) {
 				i--;
 				continue;
+			}
+			else if (!strcmp("-date", argc[i])) {
+				int prov = 0;
+				if (argc[i + 1][prov] == '+') {
+					prov++;
+				}
+				// if (argc[i + 1][strlen(argc[i + 1] - 1)] != 'm' && argc[i + 1][strlen(argc[i + 1] - 1)] != 'h' && argc[i + 1][strlen(argc[i + 1] - 1)] != 'j') {
+				// 	// printf("Wrong letter in the -date flag. Expected 'm', 'h' or 'j'.\n");
+				// 	return 1;
+				// }
+
+				parameter.date = argc[i + 1];
+
+				parameter.quantity++;
 			}
 			else {
 				printf("Incorrect parameters, try again!\n");
