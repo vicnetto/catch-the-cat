@@ -167,13 +167,13 @@ int show_files_in_specific_path(int depth, char *path, Parameter parameter) {
 					verify_if_can_be_printed(parameter, full_path, dir->d_name, depth);
 			} else {
 				// Print directory.
-				if (parameter.dir == "") {
-					printf("%s\n", full_path);
-				} else if (parameter.dir != NULL && evaluate_regex_perfect_match(parameter.dir, dir->d_name)) {
-					printf("%s\n", full_path);
-				}
-
 				if (strcmp("..", dir->d_name) && strcmp(".", dir->d_name)) {
+					if (parameter.dir == "" || parameter.quantity == 0) {
+						printf("%s\n", full_path);
+					} else if (parameter.dir != NULL && evaluate_regex_perfect_match(parameter.dir, dir->d_name)) {
+						printf("%s\n", full_path);
+					}
+
 					show_files_in_specific_path(depth + 1, full_path, parameter);
 				}
 			}
@@ -188,21 +188,20 @@ int show_files_in_specific_path(int depth, char *path, Parameter parameter) {
 // Verify if the first parameter is a file
 int main(int argv, char *argc[]) {
 	Parameter parameter;
+	parameter.name = NULL;
+	parameter.size = NULL;
+	parameter.mime = NULL;
+	parameter.dir = NULL;
+	parameter.ctc = NULL;
+	parameter.test = false;
+	parameter.quantity = 0;
 
-	if (argv < 3) {
+	if (argv < 2) {
 		printf("The path needs to be specified!\n");
 		return 1;
 	}
 
 	if (argv >= 3) {
-		parameter.name = NULL;
-		parameter.size = NULL;
-		parameter.mime = NULL;
-		parameter.dir = NULL;
-		parameter.ctc = NULL;
-		parameter.test = false;
-		parameter.quantity = 0;
-
 		for (int i = 2; i < argv; i += 2) {
 			if (!strcmp("-test", argc[i])) {
 				parameter.test = true;
@@ -289,6 +288,9 @@ int main(int argv, char *argc[]) {
 	}
 
 	cleanPath[iCleanPath] = '\0';
+
+	if (parameter.quantity == 0)
+		printf("%s\n", cleanPath);
 
 	show_files_in_specific_path(0, cleanPath, parameter);
 
