@@ -136,6 +136,7 @@ int show_files_in_specific_path(int depth, char *path, Parameter parameter) {
 	DIR *d;
 	struct dirent *dir;
 	d = opendir(path);
+
 	if (d) {
 		while ((dir = readdir(d)) != NULL) {
 			// Print file.
@@ -153,6 +154,8 @@ int show_files_in_specific_path(int depth, char *path, Parameter parameter) {
 		}
 
 		closedir(d);
+	} else {
+		printf("Does not exist!");
 	}
 
 	return 0;
@@ -227,7 +230,25 @@ int main(int argv, char *argc[]) {
 		}
 	}
 
-	show_files_in_specific_path(0, argc[1], parameter);
+	char cleanPath[FULL_SIZE_OF_PATH];
+	bool isSlash = false;
+	int pathLen = strlen(argc[1]);
+	int iCleanPath = 0;
+	for (int i = 0; argc[1][i] != '\0'; i++) {
+		if (argc[1][i] == '/' && (!isSlash && pathLen - 1 != i)) {
+			isSlash = true;
+
+			cleanPath[iCleanPath] = '/';
+			iCleanPath++;
+		} else if (argc[1][i] != '/') {
+			isSlash = false;
+
+			cleanPath[iCleanPath] = argc[1][i];
+			iCleanPath++;
+		} 
+	}
+
+	show_files_in_specific_path(0, cleanPath, parameter);
 
 	return 0;
 }
