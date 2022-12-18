@@ -14,6 +14,7 @@
 typedef struct {
 	char* name;
 	char* size;
+	char* date;
 	char* mime;
 	char* ctc;
 	char* dir;

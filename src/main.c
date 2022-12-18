@@ -92,6 +92,7 @@ int main(int argv, char *argc[]) {
 	parameter.size = NULL;
 	parameter.mime = NULL;
 	parameter.dir = NULL;
+	parameter.date = NULL;
 	parameter.ctc = NULL;
 	parameter.test = false;
 	parameter.quantity = 0;
@@ -139,6 +140,10 @@ int main(int argv, char *argc[]) {
 			}
 			else if (!strcmp("-mime", argc[i])) {
 				parameter.mime = argc[i + 1];
+				parameter.quantity++;
+			}
+			else if (!strcmp("-date", argc[i])) {
+				parameter.date = argc[i + 1];
 				parameter.quantity++;
 			}
 			else if (!strcmp("-ctc", argc[i])) {
