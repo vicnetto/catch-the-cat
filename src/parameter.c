@@ -75,3 +75,37 @@ void verify_size(int *successful_parameters, char *full_path, int file_size, cha
         (isdigit(value[0])  && size == threshold))
         (*successful_parameters)++;
 }
+
+void verify_date(int *successful_parameters, char *full_path, char *value) {
+    time_t now = time(0);
+
+    time_t last_access = get_file_last_access(full_path);
+
+    char unit = value[strlen(value) - 1];
+    int multiplier = unit == 'm' ? 60 : unit == 'h' ? 3600 : unit == 'j' ? 3600*24 : 60;
+
+    time_t wanted_delay;
+
+    if (value[0] == '+') {
+        char number[strlen(value) - 2];
+        memcpy(number, value + 1, strlen(value) - 1);
+        wanted_delay = multiplier * atoi(number);
+    }
+    else {
+        char number[strlen(value) - 1];
+        memcpy(number, value, strlen(value) - 1);
+        wanted_delay = multiplier * atoi(number);
+    }
+
+    time_t delay = now - last_access;
+
+    if (value[0] == '+') {
+        if (delay > wanted_delay) {
+            (*successful_parameters)++;
+        }
+    } else {
+        if (delay < wanted_delay) {
+            (*successful_parameters)++;
+        }
+    }
+}

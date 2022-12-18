@@ -10,6 +10,7 @@
 #include <ctype.h>
 #include <regex.h>
 #include <time.h>
+#include <langinfo.h>
 #include "lib/MegaMimes.h"
 #include "parameter.h"
 #include "regex_evaluation.h"
@@ -25,7 +26,7 @@ time_t get_file_last_access(char *full_path) {
 
 	stat(full_path, &filestat);
 
-	return &filestat.st_atim;
+	return filestat.st_mtime;
 }
 
 void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_name, int depth) {
@@ -51,38 +52,39 @@ void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_n
 	}
 
 	if (parameter.date != NULL) {
-		time_t now = time(0);
+		// time_t now = time(0);
 
-		time_t last_access = get_file_last_access(full_path);
-		
-		char unit = parameter.date[strlen(parameter.date) - 1];
-		int multiplier = unit == 'm' ? 60 : unit == 'h' ? 3600 : unit == 'j' ? 3600*24 : 60;
+		// time_t last_access = get_file_last_access(full_path);
 
-		time_t wanted_delay;
+		// char unit = parameter.date[strlen(parameter.date) - 1];
+		// int multiplier = unit == 'm' ? 60 : unit == 'h' ? 3600 : unit == 'j' ? 3600*24 : 60;
 
-		if (parameter.date[0] == '+') {
-			char number[strlen(parameter.date) - 2];
-			memcpy(number, parameter.date + 1, strlen(parameter.date) - 1);
-			wanted_delay = multiplier * atoi(number);
-		}
-		else {
-			char number[strlen(parameter.date) - 1];
-			memcpy(number, parameter.date, strlen(parameter.date) - 1);
-			wanted_delay = multiplier * atoi(number);
-		}
+		// time_t wanted_delay;
 
-		time_t delay = now - last_access;
+		// if (parameter.date[0] == '+') {
+		// 	char number[strlen(parameter.date) - 2];
+		// 	memcpy(number, parameter.date + 1, strlen(parameter.date) - 1);
+		// 	wanted_delay = multiplier * atoi(number);
+		// }
+		// else {
+		// 	char number[strlen(parameter.date) - 1];
+		// 	memcpy(number, parameter.date, strlen(parameter.date) - 1);
+		// 	wanted_delay = multiplier * atoi(number);
+		// }
 
-		if (parameter.date[0] == '+') {
-			if (delay > wanted_delay) {
-				successful_parameters++;
-			}
-		}
-		else {
-			if (delay < wanted_delay) {
-				successful_parameters++;
-			}
-		}
+		// time_t delay = now - last_access;
+
+		// if (parameter.date[0] == '+') {
+		// 	if (delay > wanted_delay) {
+		// 		successful_parameters++;
+		// 	}
+		// } else {
+		// 	if (delay < wanted_delay) {
+		// 		successful_parameters++;
+		// 	}
+		// }
+
+		verify_date(&successful_parameters, full_path, parameter.date);
 	}
 
 	if (parameter.quantity == successful_parameters)
@@ -186,10 +188,6 @@ int main(int argv, char *argc[]) {
 				parameter.mime = argc[i + 1];
 				parameter.quantity++;
 			}
-			else if (!strcmp("-date", argc[i])) {
-				parameter.date = argc[i + 1];
-				parameter.quantity++;
-			}
 			else if (!strcmp("-ctc", argc[i])) {
 				parameter.ctc = argc[i + 1];
 				parameter.quantity++;
@@ -203,23 +201,33 @@ int main(int argv, char *argc[]) {
 				}
 				parameter.quantity++;
 			}
+			else if (!strcmp("-date", argc[i])) {
+				parameter.date = argc[i + 1];
+
+				if (argc[i + 1][0] != '+' && !isdigit(argc[i + 1][0])) {
+					printf("The value of the -date flag must start with '+' or the number.\n");
+
+					return 1;
+				}
+
+				char number[FULL_SIZE_OF_FILE] = "";
+				strncpy(number, parameter.date + !isdigit(argc[i + 1][0]), strlen(parameter.date) - 2);
+
+				if (!atoi(number)) {
+					printf("Invalid number for the flag -date. Please try in the format: {+, }number{m,h,j}.\n");
+					return 1;
+				}
+
+				if (argc[i + 1][strlen(argc[i + 1]) - 1] != 'm' && argc[i + 1][strlen(argc[i + 1]) - 1] != 'h' && argc[i + 1][strlen(argc[i + 1]) - 1] != 'j') {
+					printf("Wrong letter in the -date flag. Expected 'm', 'h' or 'j'.\n");
+					return 1;
+				}
+
+				parameter.quantity++;
+			}
 			else if (!strcmp("-test", argc[i])) {
 				i--;
 				continue;
-			}
-			else if (!strcmp("-date", argc[i])) {
-				int prov = 0;
-				if (argc[i + 1][prov] == '+') {
-					prov++;
-				}
-				// if (argc[i + 1][strlen(argc[i + 1] - 1)] != 'm' && argc[i + 1][strlen(argc[i + 1] - 1)] != 'h' && argc[i + 1][strlen(argc[i + 1] - 1)] != 'j') {
-				// 	// printf("Wrong letter in the -date flag. Expected 'm', 'h' or 'j'.\n");
-				// 	return 1;
-				// }
-
-				parameter.date = argc[i + 1];
-
-				parameter.quantity++;
 			}
 			else {
 				printf("Le flag %s n'est pas correct\n", argc[i]);
