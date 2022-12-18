@@ -5,6 +5,15 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+int get_octal_chmod(char *full_path) {
+	struct stat buf;
+	stat(full_path, &buf);
+
+	int permission = buf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
+
+	return permission;
+}
+
 long int get_file_size(char *full_path) {
     struct stat buffer;
     int status;

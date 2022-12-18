@@ -12,6 +12,7 @@
 #define PRINT_ONLY_PATH true
 
 void print_path(bool color, bool only_path, char *full_path, char *file_name) {
+
 	if (color) {
 		if (only_path) {
 			printf("\033[0;35m");
@@ -56,6 +57,10 @@ void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_n
 
 	if (parameter.date != NULL) {
 		verify_date(&successful_parameters, full_path, parameter.date);
+	}
+
+	if (parameter.perm != NULL) {
+		verify_permission(&successful_parameters, full_path, INT_SIZE, parameter.perm);
 	}
 
 	if (parameter.quantity == successful_parameters)
@@ -159,7 +164,10 @@ int main(int argv, char *argc[]) {
 					char number[INT_SIZE] = "";
 					strncpy(number, parameter.size + !isdigit(argc[i + 1][0]), strlen(parameter.size) - (1 + !isdigit(argc[i + 1][0])));
 
-					if (!atoi(number)) {
+					char *ptr;
+					strtol(number, &ptr, 10);
+
+					if (strcmp("", ptr)) {
 						fprintf(stderr, "Invalid number for the flag -size. Please try in the format: {+,-, }number{k,G,M}\n");
 						return 1;
 					}
@@ -196,7 +204,10 @@ int main(int argv, char *argc[]) {
 				char number[INT_SIZE] = "";
 				strncpy(number, parameter.date + !isdigit(argc[i + 1][0]), strlen(parameter.date) - 1);
 
-				if (!atoi(number)) {
+				char *ptr;
+				strtol(number, &ptr, 10);
+
+				if (strcmp("", ptr)) {
 					fprintf(stderr, "Invalid number for the flag -date. Please try in the format: {+, }number{m,h,j}.\n");
 					return 1;
 				}
@@ -210,6 +221,21 @@ int main(int argv, char *argc[]) {
 			}
 			else if (!strcmp("-perm", argc[i])) {
 				parameter.perm = argc[i + 1];
+
+				char number[INT_SIZE] = "";
+				strncpy(number, parameter.perm, strlen(parameter.perm));
+
+				char *ptr;
+				strtol(number, &ptr, 10);
+
+				if (strlen(number) != 3) {
+					fprintf(stderr, "Invalid number for the flag -perm. Please try in the format: number.\n");
+					return 1;
+				} else if (strcmp("", ptr)) {
+					fprintf(stderr, "Invalid number for the flag -perm. Please try in the format: number.\n");
+					return 1;
+				}
+
 				parameter.quantity++;
 			}
 			else if (!strcmp("-threads", argc[i])) {

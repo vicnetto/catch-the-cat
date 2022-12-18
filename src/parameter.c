@@ -109,3 +109,13 @@ void verify_date(int *successful_parameters, char *full_path, char *value) {
         }
     }
 }
+
+void verify_permission(int *successful_parameters, char *full_path, int int_size, char *value) {
+    int octal = get_octal_chmod(full_path);
+    char octal_as_string[int_size];
+    sprintf(octal_as_string, "%o", octal);
+
+    if (atoi(octal_as_string) == atoi(value)) {
+        (*successful_parameters)++;
+    }
+}
