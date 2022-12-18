@@ -78,8 +78,34 @@ void verify_size(int *successful_parameters, char *full_path, int file_size, cha
 
 void verify_date(int *successful_parameters, char *full_path, char *value) {
     time_t now = time(0);
-
     time_t last_access = get_file_last_access(full_path);
+
+    time_t delay = now - last_access;
+
+    char *cmp = !strcmp("now", value) ? "%H%M%S%d%m%Y" : 
+                !strcmp("today", value) || !strcmp("yesterday", value) ? "%d%m%Y" : 
+                !strcmp("this month", value) ? "%m%Y" : NULL;
+
+    if (cmp != NULL) {
+        struct tm *time_reference;
+        struct tm *time_last_access;
+
+        char reference_cmp[30];
+        char last_access_cmp[30];
+
+        if (!strcmp("yesterday", value))
+            now -= 60 * 60 * 24;
+
+        time_reference = localtime(&now);
+        strftime(reference_cmp, sizeof(reference_cmp), cmp, time_reference);
+        time_last_access = localtime(&last_access);
+        strftime(last_access_cmp, sizeof(last_access_cmp), cmp, time_last_access);
+
+        if (!strcmp(reference_cmp, last_access_cmp))
+            (*successful_parameters)++;
+
+        return;
+    }
 
     char unit = value[strlen(value) - 1];
     int multiplier = unit == 'm' ? 60 : unit == 'h' ? 3600 : unit == 'j' ? 3600*24 : 60;
@@ -96,8 +122,6 @@ void verify_date(int *successful_parameters, char *full_path, char *value) {
         memcpy(number, value, strlen(value) - 1);
         wanted_delay = multiplier * atoi(number);
     }
-
-    time_t delay = now - last_access;
 
     if (value[0] == '+') {
         if (delay > wanted_delay) {

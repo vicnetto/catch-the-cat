@@ -195,26 +195,30 @@ int main(int argv, char *argc[]) {
 			else if (!strcmp("-date", argc[i])) {
 				parameter.date = argc[i + 1];
 
-				if (argc[i + 1][0] != '+' && !isdigit(argc[i + 1][0])) {
-					fprintf(stderr, "The value of the -date flag must start with '+' or the number.\n");
+				if (strcmp("now", argc[i + 1]) && strcmp("today", argc[i + 1]) &&
+					strcmp("yesterday", argc[i + 1]) && strcmp("this month", argc[i + 1])) {
 
-					return 1;
-				}
+					if (argc[i + 1][0] != '+' && !isdigit(argc[i + 1][0])) {
+						fprintf(stderr, "The value of the -date flag must start with '+' or the number.\n");
 
-				char number[INT_SIZE] = "";
-				strncpy(number, parameter.date + !isdigit(argc[i + 1][0]), strlen(parameter.date) - 1);
+						return 1;
+					}
 
-				char *ptr;
-				strtol(number, &ptr, 10);
+					char number[INT_SIZE] = "";
+					strncpy(number, parameter.date + !isdigit(argc[i + 1][0]), strlen(parameter.date) - 1);
 
-				if (strcmp("", ptr)) {
-					fprintf(stderr, "Invalid number for the flag -date. Please try in the format: {+, }number{m,h,j}.\n");
-					return 1;
-				}
+					char *ptr;
+					strtol(number, &ptr, 10);
 
-				if (argc[i + 1][strlen(argc[i + 1]) - 1] != 'm' && argc[i + 1][strlen(argc[i + 1]) - 1] != 'h' && argc[i + 1][strlen(argc[i + 1]) - 1] != 'j') {
-					fprintf(stderr, "Wrong letter in the -date flag. Expected 'm', 'h' or 'j'.\n");
-					return 1;
+					if (strcmp("", ptr)) {
+						fprintf(stderr, "Invalid number for the flag -date. Please try in the format: {+, }number{m,h,j}.\n");
+						return 1;
+					}
+
+					if (argc[i + 1][strlen(argc[i + 1]) - 1] != 'm' && argc[i + 1][strlen(argc[i + 1]) - 1] != 'h' && argc[i + 1][strlen(argc[i + 1]) - 1] != 'j') {
+						fprintf(stderr, "Wrong letter in the -date flag. Expected 'm', 'h' or 'j'.\n");
+						return 1;
+					}
 				}
 
 				parameter.quantity++;

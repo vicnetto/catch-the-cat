@@ -24,21 +24,6 @@ long int get_file_size(char *full_path) {
         return buffer.st_size;
     } else
         return -1;
-
-	// FILE *fp = fopen(full_path, "ra");
-
-	// if (fp == NULL)
-	// 	return -1;
-
-	// if (fseek(fp, 0, SEEK_END) < 0) {
-	// 	fclose(fp);
-	// 	return -1;
-	// }
-
-	// long size = ftell(fp);
-
-	// fclose(fp);
-	// return size;
 }
 
 time_t get_file_last_access(char *full_path) {
