@@ -1,4 +1,4 @@
-image: racouchot/projet_sys22
+image: gl-registry.telecomnancy.univ-lorraine.fr/christophe.bouthier/rs2022-dockertest:latest
 
 stages:
   - build
