@@ -21,14 +21,6 @@
 #define FULL_SIZE_OF_NAME 100
 #define FULL_SIZE_OF_TYPE 100
 
-time_t get_file_last_access(char *full_path) {
-	struct stat filestat;
-
-	stat(full_path, &filestat);
-
-	return filestat.st_mtime;
-}
-
 void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_name, int depth) {
 	// Variable to verify if all the parameters have been used.
 	int successful_parameters = 0;

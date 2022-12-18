@@ -31,3 +31,11 @@ long int get_file_size(char *full_path) {
 	// fclose(fp);
 	// return size;
 }
+
+time_t get_file_last_access(char *full_path) {
+	struct stat filestat;
+
+	stat(full_path, &filestat);
+
+	return filestat.st_mtime;
+}
