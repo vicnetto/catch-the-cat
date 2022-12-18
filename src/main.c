@@ -63,7 +63,10 @@ void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_n
 		verify_permission(&successful_parameters, full_path, INT_SIZE, parameter.perm);
 	}
 
-	if (parameter.quantity == successful_parameters)
+	if (parameter.ou == true && successful_parameters >= 1)
+		print_path(parameter.color, !PRINT_ONLY_PATH, full_path, file_name);
+
+	else if (parameter.quantity == successful_parameters)
 		print_path(parameter.color, !PRINT_ONLY_PATH, full_path, file_name);
 
 }
@@ -119,6 +122,7 @@ int main(int argv, char *argc[]) {
 	parameter.ctc = NULL;
 	parameter.test = false;
 	parameter.quantity = 0;
+	parameter.ou = false;
 
 	if (argv < 2) {
 		fprintf(stderr, "The path needs to be specified!\n");
@@ -255,6 +259,11 @@ int main(int argv, char *argc[]) {
 				i--;
 				continue;
 			}
+			else if (!strcmp("-ou", argc[i])) {
+				parameter.ou = true;
+				i--;
+				continue;
+			} 
 			else {
 				printf("Le flag %s n'est pas correct\n", argc[i]);
 				return 1;
