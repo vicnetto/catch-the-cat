@@ -164,7 +164,7 @@ int main(int argv, char *argc[]) {
 				continue;
 			}
 			else {
-				printf("Incorrect parameters, try again!\n");
+				printf("Le flag %s n'est pas correct\n", argc[i]);
 				return 1;
 			}
 
@@ -172,6 +172,9 @@ int main(int argv, char *argc[]) {
 				printf("La valeur du flag %s est %s\n", argc[i], argc[i+1]);
 		}
 	}
+
+	if (parameter.test == true)
+		return 0;
 
 	if (parameter.quantity == 0)
 		printf("%s\n", argc[1]);
