@@ -23,6 +23,7 @@ typedef struct {
 	char* perm;
 	char* threads;
 	bool test;
+	bool color;
 	int quantity;
 } Parameter;
 

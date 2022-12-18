@@ -9,12 +9,27 @@
 #include "regex_evaluation.h"
 
 #define INT_SIZE 11
+#define PRINT_ONLY_PATH true
 
-void print_full_path(char *full_path, char *file_name) {
-	printf("%.*s", strlen(full_path) - strlen(file_name), full_path);
-	printf("\033[0;31m");
-	printf("Hello\n");
-	printf("\033[0m");
+void print_path(bool color, bool only_path, char *full_path, char *file_name) {
+	if (color) {
+		if (only_path) {
+			printf("\033[0;35m");
+			printf("%s\n", full_path);
+			printf("\033[0m");
+		} else {
+			int size = strlen(full_path) - strlen(file_name);
+
+			printf("\033[0;35m");
+			printf("%.*s", size, full_path);
+			printf("\033[0m");
+
+			printf("\033[0;32m");
+			printf("%s\n", file_name);
+			printf("\033[0m");
+		}
+	} else
+		printf("%s\n", full_path);
 }
 
 void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_name) {
@@ -44,7 +59,7 @@ void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_n
 	}
 
 	if (parameter.quantity == successful_parameters)
-		printf("%s\n", full_path);
+		print_path(parameter.color, !PRINT_ONLY_PATH, full_path, file_name);
 
 }
 
@@ -69,13 +84,10 @@ int show_files_in_specific_path(Parameter parameter, char *path) {
 				// Print directory.
 				if (strcmp("..", dir->d_name) && strcmp(".", dir->d_name)) {
 					if (parameter.dir != NULL) {
-						if (!strcmp(parameter.dir, "")) {
-							printf("%s\n", full_path);
-						} else if (evaluate_regex_perfect_match(parameter.dir, dir->d_name)) {
-							printf("%s\n", full_path);
-						}
+						if (!strcmp(parameter.dir, "") || evaluate_regex_perfect_match(parameter.dir, dir->d_name))
+							print_path(parameter.color, PRINT_ONLY_PATH, full_path, dir->d_name);
 					} else if (parameter.quantity == 0) {
-						printf("%s\n", full_path);
+						print_path(parameter.color, PRINT_ONLY_PATH, full_path, dir->d_name);
 					}
 
 					show_files_in_specific_path(parameter, full_path);
@@ -208,6 +220,11 @@ int main(int argv, char *argc[]) {
 				i--;
 				continue;
 			}
+			else if (!strcmp("-color", argc[i])) {
+				parameter.color = true;
+				i--;
+				continue;
+			}
 			else {
 				printf("Le flag %s n'est pas correct\n", argc[i]);
 				return 1;
@@ -222,7 +239,7 @@ int main(int argv, char *argc[]) {
 		return 0;
 
 	if (parameter.quantity == 0)
-		printf("%s\n", argc[1]);
+		print_path(parameter.color, PRINT_ONLY_PATH, argc[1], NULL);
 
 	show_files_in_specific_path(parameter, argc[1]);
 
