@@ -168,34 +168,10 @@ int main(int argv, char *argc[]) {
 		}
 	}
 
-	char cleanPath[FULL_SIZE_OF_PATH];
-	bool isSlash = false;
-	int iCleanPath = 0;
-	for (int i = 0; argc[1][i] != '\0'; i++) {
-		if (argc[1][i] == '/' && !isSlash) {
-			isSlash = true;
-
-			cleanPath[iCleanPath] = '/';
-			iCleanPath++;
-		} else if (argc[1][i] != '/') {
-			isSlash = false;
-
-			cleanPath[iCleanPath] = argc[1][i];
-			iCleanPath++;
-		} 
-	}
-
-	// Verifies if the path is already finishing with the slash.
-	if (cleanPath[iCleanPath - 1] != '/') {
-		cleanPath[iCleanPath++] = '/';
-	}
-
-	cleanPath[iCleanPath] = '\0';
-
 	if (parameter.quantity == 0)
-		printf("%s\n", cleanPath);
+		printf("%s\n", argc[1]);
 
-	show_files_in_specific_path(0, cleanPath, parameter);
+	show_files_in_specific_path(0, argc[1], parameter);
 
 	return 0;
 }
