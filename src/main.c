@@ -8,6 +8,10 @@
 #include "parameter.h"
 #include "regex_evaluation.h"
 
+#define PURPLE "\033[0;35m"
+#define GREEN "\033[0;32m"
+#define WHITE "\033[0m"
+
 #define INT_SIZE 11
 #define PRINT_ONLY_PATH true
 
@@ -15,19 +19,17 @@ void print_path(bool color, bool only_path, char *full_path, char *file_name) {
 
 	if (color) {
 		if (only_path) {
-			printf("\033[0;35m");
+			printf(PURPLE);
 			printf("%s\n", full_path);
-			printf("\033[0m");
+			printf(WHITE);
 		} else {
 			int size = strlen(full_path) - strlen(file_name);
 
-			printf("\033[0;35m");
+			printf(PURPLE);
 			printf("%.*s", size, full_path);
-			printf("\033[0m");
-
-			printf("\033[0;32m");
+			printf(GREEN);
 			printf("%s\n", file_name);
-			printf("\033[0m");
+			printf(WHITE);
 		}
 	} else
 		printf("%s\n", full_path);
@@ -63,12 +65,8 @@ void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_n
 		verify_permission(&successful_parameters, full_path, INT_SIZE, parameter.perm);
 	}
 
-	if (parameter.ou == true && successful_parameters >= 1)
+	if ((parameter.ou == true && successful_parameters >= 1) || (parameter.quantity == successful_parameters))
 		print_path(parameter.color, !PRINT_ONLY_PATH, full_path, file_name);
-
-	else if (parameter.quantity == successful_parameters)
-		print_path(parameter.color, !PRINT_ONLY_PATH, full_path, file_name);
-
 }
 
 int show_files_in_specific_path(Parameter parameter, char *path) {
