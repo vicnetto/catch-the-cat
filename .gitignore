@@ -1,2 +1,3 @@
 # Ignoring the files from the CLion IDE
 .idea/**
+obj/**
