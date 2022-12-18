@@ -2,26 +2,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <dirent.h> 
-#include <stdbool.h>  
 #include <dirent.h>
+#include <stdbool.h>  
 #include <ctype.h>
-#include <regex.h>
-#include <time.h>
-#include <langinfo.h>
-#include "lib/MegaMimes.h"
 #include "parameter.h"
 #include "regex_evaluation.h"
-#include "file_information.h"
 
-#define FULL_SIZE_OF_PATH 500
-#define FULL_SIZE_OF_FILE 11
-#define FULL_SIZE_OF_NAME 100
-#define FULL_SIZE_OF_TYPE 100
+#define INT_SIZE 11
 
-void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_name, int depth) {
+void print_full_path(char *full_path, char *file_name) {
+	printf("%.*s", strlen(full_path) - strlen(file_name), full_path);
+	printf("\033[0;31m");
+	printf("Hello\n");
+	printf("\033[0m");
+}
+
+void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_name) {
 	// Variable to verify if all the parameters have been used.
 	int successful_parameters = 0;
 
@@ -31,7 +27,7 @@ void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_n
 	}
 
 	if (parameter.mime != NULL) {
-		verify_mime(&successful_parameters, full_path, FULL_SIZE_OF_PATH, parameter.mime);
+		verify_mime(&successful_parameters, full_path, parameter.mime);
 	}
 
 	if (parameter.ctc != NULL) {
@@ -40,7 +36,7 @@ void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_n
 
 	// Verifies if the file is in the range of the size flag.
 	if (parameter.size != NULL) {
-		verify_size(&successful_parameters, full_path, FULL_SIZE_OF_FILE, parameter.size);
+		verify_size(&successful_parameters, full_path, INT_SIZE, parameter.size);
 	}
 
 	if (parameter.date != NULL) {
@@ -52,7 +48,7 @@ void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_n
 
 }
 
-int show_files_in_specific_path(int depth, char *path, Parameter parameter) {
+int show_files_in_specific_path(Parameter parameter, char *path) {
 
 	DIR *d;
 	struct dirent *dir;
@@ -60,13 +56,15 @@ int show_files_in_specific_path(int depth, char *path, Parameter parameter) {
 
 	if (d) {
 		while ((dir = readdir(d)) != NULL) {
-			char full_path[FULL_SIZE_OF_PATH];
-			snprintf(full_path, FULL_SIZE_OF_PATH, "%s%s%s", path, path[strlen(path) - 1] == '/' ? "" : "/",  dir->d_name);
+			int size = strlen(path) + strlen(dir->d_name) + (path[strlen(path) - 1] == '/' ? 0 : 1) + 1;
+			char full_path[size];
+			snprintf(full_path, size, "%s%s%s", path, path[strlen(path) - 1] == '/' ? "" : "/",  dir->d_name);
+			full_path[strlen(full_path)] = '\0';
 
 			// Print file.
 			if (dir->d_type == DT_REG) {
 				if (parameter.dir == NULL) 
-					verify_if_can_be_printed(parameter, full_path, dir->d_name, depth);
+					verify_if_can_be_printed(parameter, full_path, dir->d_name);
 			} else {
 				// Print directory.
 				if (strcmp("..", dir->d_name) && strcmp(".", dir->d_name)) {
@@ -80,7 +78,7 @@ int show_files_in_specific_path(int depth, char *path, Parameter parameter) {
 						printf("%s\n", full_path);
 					}
 
-					show_files_in_specific_path(depth + 1, full_path, parameter);
+					show_files_in_specific_path(parameter, full_path);
 				}
 			}
 		}
@@ -106,7 +104,7 @@ int main(int argv, char *argc[]) {
 	parameter.quantity = 0;
 
 	if (argv < 2) {
-		printf("The path needs to be specified!\n");
+		fprintf(stderr, "The path needs to be specified!\n");
 		return 1;
 	}
 
@@ -119,7 +117,7 @@ int main(int argv, char *argc[]) {
 
 		for (int i = 2; i < argv; i += 2) {
 			if (argc[i][0] != '-') {
-				printf("Multiple parameters are not allowed, are you trying to use a flag? TIP: start with -\n");
+				fprintf(stderr, "Multiple parameters are not allowed, are you trying to use a flag? TIP: start with -\n");
 				return 1;
 			}
 
@@ -134,12 +132,23 @@ int main(int argv, char *argc[]) {
 
 				parameter.size = argc[i + 1];
 
+				if (parameter.size[0] != '+' && parameter.size[0] != '-' && !isdigit(parameter.size[0])) {
+					fprintf(stderr, "Invalid for the flag size. Please try in the format: {+,-, }number{k,G,M}\n");
+					return 1;
+				}
+
+				char lastDigit = parameter.size[strlen(parameter.size) - 1];
+				if (lastDigit != 'c' && lastDigit != 'k' && lastDigit != 'M' && lastDigit != 'G' && !isdigit(lastDigit)) {
+					fprintf(stderr, "Invalid for the flag size. Please try in the format: {+,-, }number{k,G,M}\n");
+					return 1;
+				}
+
 				if (isdigit(argc[i + 1][0])) {
-					char number[FULL_SIZE_OF_FILE] = "";
+					char number[INT_SIZE] = "";
 					strncpy(number, parameter.size + !isdigit(argc[i + 1][0]), strlen(parameter.size) - (1 + !isdigit(argc[i + 1][0])));
 
 					if (!atoi(number)) {
-						printf("Invalid number for the flag -size. Please try in the format: {+,-, }number{k,G,M}\n");
+						fprintf(stderr, "Invalid number for the flag -size. Please try in the format: {+,-, }number{k,G,M}\n");
 						return 1;
 					}
 				}
@@ -167,21 +176,21 @@ int main(int argv, char *argc[]) {
 				parameter.date = argc[i + 1];
 
 				if (argc[i + 1][0] != '+' && !isdigit(argc[i + 1][0])) {
-					printf("The value of the -date flag must start with '+' or the number.\n");
+					fprintf(stderr, "The value of the -date flag must start with '+' or the number.\n");
 
 					return 1;
 				}
 
-				char number[FULL_SIZE_OF_FILE] = "";
+				char number[INT_SIZE] = "";
 				strncpy(number, parameter.date + !isdigit(argc[i + 1][0]), strlen(parameter.date) - 1);
 
 				if (!atoi(number)) {
-					printf("Invalid number for the flag -date. Please try in the format: {+, }number{m,h,j}.\n");
+					fprintf(stderr, "Invalid number for the flag -date. Please try in the format: {+, }number{m,h,j}.\n");
 					return 1;
 				}
 
 				if (argc[i + 1][strlen(argc[i + 1]) - 1] != 'm' && argc[i + 1][strlen(argc[i + 1]) - 1] != 'h' && argc[i + 1][strlen(argc[i + 1]) - 1] != 'j') {
-					printf("Wrong letter in the -date flag. Expected 'm', 'h' or 'j'.\n");
+					fprintf(stderr, "Wrong letter in the -date flag. Expected 'm', 'h' or 'j'.\n");
 					return 1;
 				}
 
@@ -215,7 +224,7 @@ int main(int argv, char *argc[]) {
 	if (parameter.quantity == 0)
 		printf("%s\n", argc[1]);
 
-	show_files_in_specific_path(0, argc[1], parameter);
+	show_files_in_specific_path(parameter, argc[1]);
 
 	return 0;
 }

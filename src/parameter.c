@@ -10,10 +10,10 @@ void verify_name(int *successful_parameters, char *file_name, char *value) {
     }
 }
 
-void verify_mime(int *successful_parameters, char *full_path, int size_type, char *value) {
+void verify_mime(int *successful_parameters, char *full_path,char *value) {
     if (getMegaMimeType(full_path) != NULL) {
-        char typeSubType[size_type];
-        char type[size_type];
+        char typeSubType[TYPE_SIZE];
+        char type[TYPE_SIZE];
         strcpy(typeSubType, getMegaMimeType(full_path));
 
         int endType = strchr(typeSubType, '/') - typeSubType;
