@@ -19,6 +19,8 @@ typedef struct {
 	char* mime;
 	char* ctc;
 	char* dir;
+	char* perm;
+	char* threads;
 	bool test;
 	int quantity;
 } Parameter;

@@ -99,6 +99,8 @@ int main(int argv, char *argc[]) {
 	parameter.mime = NULL;
 	parameter.dir = NULL;
 	parameter.date = NULL;
+	parameter.perm = NULL;
+	parameter.threads = NULL;
 	parameter.ctc = NULL;
 	parameter.test = false;
 	parameter.quantity = 0;
@@ -171,7 +173,7 @@ int main(int argv, char *argc[]) {
 				}
 
 				char number[FULL_SIZE_OF_FILE] = "";
-				strncpy(number, parameter.date + !isdigit(argc[i + 1][0]), strlen(parameter.date) - 2);
+				strncpy(number, parameter.date + !isdigit(argc[i + 1][0]), strlen(parameter.date) - 1);
 
 				if (!atoi(number)) {
 					printf("Invalid number for the flag -date. Please try in the format: {+, }number{m,h,j}.\n");
@@ -183,6 +185,14 @@ int main(int argv, char *argc[]) {
 					return 1;
 				}
 
+				parameter.quantity++;
+			}
+			else if (!strcmp("-perm", argc[i])) {
+				parameter.perm = argc[i + 1];
+				parameter.quantity++;
+			}
+			else if (!strcmp("-threads", argc[i])) {
+				parameter.threads = argc[i + 1];
 				parameter.quantity++;
 			}
 			else if (!strcmp("-test", argc[i])) {
