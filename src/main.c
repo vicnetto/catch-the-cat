@@ -63,7 +63,7 @@ void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_n
 		verify_permission(&successful_parameters, full_path, INT_SIZE, parameter.perm);
 	}
 
-	if (parameter.ou == true && parameter.quantity >= 1)
+	if (parameter.ou == true && successful_parameters >= 1)
 		print_path(parameter.color, !PRINT_ONLY_PATH, full_path, file_name);
 
 	else if (parameter.quantity == successful_parameters)
