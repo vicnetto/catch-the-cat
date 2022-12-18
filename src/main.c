@@ -14,7 +14,7 @@
 #include "lib/MegaMimes.h"
 #include "parameter.h"
 #include "regex_evaluation.h"
-#include "file_size.h"
+#include "file_information.h"
 
 #define FULL_SIZE_OF_PATH 500
 #define FULL_SIZE_OF_FILE 11
@@ -52,38 +52,6 @@ void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_n
 	}
 
 	if (parameter.date != NULL) {
-		// time_t now = time(0);
-
-		// time_t last_access = get_file_last_access(full_path);
-
-		// char unit = parameter.date[strlen(parameter.date) - 1];
-		// int multiplier = unit == 'm' ? 60 : unit == 'h' ? 3600 : unit == 'j' ? 3600*24 : 60;
-
-		// time_t wanted_delay;
-
-		// if (parameter.date[0] == '+') {
-		// 	char number[strlen(parameter.date) - 2];
-		// 	memcpy(number, parameter.date + 1, strlen(parameter.date) - 1);
-		// 	wanted_delay = multiplier * atoi(number);
-		// }
-		// else {
-		// 	char number[strlen(parameter.date) - 1];
-		// 	memcpy(number, parameter.date, strlen(parameter.date) - 1);
-		// 	wanted_delay = multiplier * atoi(number);
-		// }
-
-		// time_t delay = now - last_access;
-
-		// if (parameter.date[0] == '+') {
-		// 	if (delay > wanted_delay) {
-		// 		successful_parameters++;
-		// 	}
-		// } else {
-		// 	if (delay < wanted_delay) {
-		// 		successful_parameters++;
-		// 	}
-		// }
-
 		verify_date(&successful_parameters, full_path, parameter.date);
 	}
 

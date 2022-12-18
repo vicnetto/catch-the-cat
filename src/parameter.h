@@ -7,9 +7,10 @@
 #include <regex.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 #include "lib/MegaMimes.h"
 #include "regex_evaluation.h"
-#include "file_size.h"
+#include "file_information.h"
 
 typedef struct {
 	char* name;
@@ -26,5 +27,6 @@ void verify_name(int *successeful_parameters, char *file_name, char *value);
 void verify_mime(int *successeful_parameters, char *full_path, int size_type, char *value);
 void verify_ctc(int *successful_parameters, char *full_path, char *value);
 void verify_size(int *successful_parameters, char *full_path, int file_size, char *value);
+void verify_date(int *successful_parameters, char *full_path, char *value);
 
 #endif

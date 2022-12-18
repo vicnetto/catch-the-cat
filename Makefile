@@ -2,7 +2,7 @@ CC=gcc
 
 CFLAGS=-Wall -g3
 
-ARCHIVESdotO=obj/main.o obj/MegaMimes.o obj/parameter.o obj/regex_evaluation.o obj/file_size.o
+ARCHIVESdotO=obj/main.o obj/MegaMimes.o obj/parameter.o obj/regex_evaluation.o obj/file_information.o
 
 all: create_object_directory ftc
 
@@ -24,8 +24,8 @@ obj/parameter.o: src/parameter.c
 obj/regex_evaluation.o: src/regex_evaluation.c
 	$(CC) $(CFLAGS) -o obj/regex_evaluation.o -c src/regex_evaluation.c
 
-obj/file_size.o: src/file_size.c
-	$(CC) $(CFLAGS) -o obj/file_size.o -c src/file_size.c
+obj/file_information.o: src/file_information.c
+	$(CC) $(CFLAGS) -o obj/file_information.o -c src/file_information.c
 
 clean:
 	rm -rf obj
