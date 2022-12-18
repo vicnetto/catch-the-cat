@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/ftc",
             "args": ["${workspaceFolder}", "-size", "+1c", "-date", "3h"],
-            "stopAtEntry": true,
+            "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
             "externalConsole": false,
