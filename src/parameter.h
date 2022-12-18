@@ -25,6 +25,7 @@ typedef struct {
 	char* threads;
 	bool test;
 	bool color;
+	bool ou;
 	int quantity;
 } Parameter;
 
