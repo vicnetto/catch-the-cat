@@ -10,143 +10,39 @@
 #include <ctype.h>
 #include <regex.h>
 #include "lib/MegaMimes.h"
+#include "parameter.h"
+#include "regex_evaluation.h"
+#include "file_size.h"
 
 #define FULL_SIZE_OF_PATH 500
 #define FULL_SIZE_OF_FILE 11
 #define FULL_SIZE_OF_NAME 100
 #define FULL_SIZE_OF_TYPE 100
 
-typedef struct {
-	char* name;
-	char* size;
-	char* mime;
-	char* ctc;
-	char* dir;
-	bool test;
-	int quantity;
-} Parameter;
-
-int i;
-
-long int get_file_size(char *full_path) {
-	FILE *fp = fopen(full_path, "ra");
-
-	if (fp == NULL)
-		return -1;
-
-	if (fseek(fp, 0, SEEK_END) < 0) {
-		fclose(fp);
-		return -1;
-	}
-
-	long size = ftell(fp);
-	// release the resources when not required
-	
-	fclose(fp);
-	return size;
-}
-
-void print_file(char *full_path, int depth) {
-	printf("%s\n", full_path);
-}
-
-bool evaluate_regex_perfect_match(char *expression, char *file_name) {
-	// Or trying the regex.
-	regex_t regex;
-	size_t nmatch = 2;
-	regmatch_t pmatch[2];
-
-	regcomp(&regex, expression, 0);
-
-	// Testing if the regex can be finded in the file name, and it returs 0 if true.
-	if (0 == regexec(&regex, file_name, nmatch, pmatch, 0))
-		return pmatch[0].rm_so == 0 && pmatch[0].rm_eo == strlen(file_name);
-	else
-		return 0;
-}
-
 void verify_if_can_be_printed(Parameter parameter, char *full_path, char *file_name, int depth) {
 	// Variable to verify if all the parameters have been used.
-	int successeful_parameters = 0;
+	int successful_parameters = 0;
 
 	// Verifies if the name of the current file is the same as defined at the flag.
 	if (parameter.name != NULL) {
-		// Verifing if the name is contained on the file name.
-		if (strcmp(file_name, parameter.name) == 0)
-			successeful_parameters++;
-		else {
-			if (evaluate_regex_perfect_match(parameter.name, file_name))
-				successeful_parameters++;
-		}
+		verify_name(&successful_parameters, file_name, parameter.name);
 	}
 
 	if (parameter.mime != NULL) {
-		if (getMegaMimeType(full_path) != NULL) {
-			char typeSubType[FULL_SIZE_OF_PATH];
-			char type[FULL_SIZE_OF_PATH];
-			strcpy(typeSubType, getMegaMimeType(full_path));
-
-			int endType = strchr(typeSubType, '/') - typeSubType;
-			strncpy(type, typeSubType, endType);
-			type[endType] = '\0';
-
-			if (!strcmp(type, parameter.mime) || !strcmp(typeSubType, parameter.mime))
-				successeful_parameters++;
-		}
-
+		verify_mime(&successful_parameters, full_path, FULL_SIZE_OF_PATH, parameter.mime);
 	}
 
 	if (parameter.ctc != NULL) {
-		FILE *fp = fopen(full_path, "r");
-
-		regex_t regex;
-		regcomp(&regex, parameter.ctc, 0);
-
-		if (fp != NULL) {
-			int test = fseek(fp, 0, SEEK_END);
-
-			if (test >= 0) {
-				long size = ftell(fp);
-				fseek(fp, 0, SEEK_SET);
-
-				char buffer[size + 1];
-
-				fread(buffer, size, 1, fp);
-				buffer[size] = '\0';
-
-				if (0 == regexec(&regex, buffer, 0, NULL, 0))
-					successeful_parameters++;
-			}
-
-			fclose(fp);
-		}
+		verify_ctc(&successful_parameters, full_path, parameter.ctc);
 	}
 
 	// Verifies if the file is in the range of the size flag.
 	if (parameter.size != NULL) {
-		long int size = get_file_size(full_path);
-
-		// Gets the multiplier that will be used to calculate the size of the file. For example, in case of 'k',
-		// the file needs to be '+' or '-' than 1024.
-		char unit = parameter.size[strlen(parameter.size) - 1];
-		int multiplier = unit == 'k' ? 1024 : unit == 'M' ? 1024 * 1024 : unit == 'G' ? 1024 * 1024 * 1024 : 1;
-
-		// Gets only the number in the -size flag.
-		char threshold_as_string[FULL_SIZE_OF_FILE];
-		strncpy(threshold_as_string, parameter.size + !isdigit(parameter.size[0]), strlen(parameter.size) - (1 + !isdigit(parameter.size[0])));
-
-		long int threshold = (long) atoi(threshold_as_string) * multiplier;
-		
-		// In case the file in the range
-		if ((parameter.size[0] == '+'    && size > threshold) || 
-			(parameter.size[0] == '-'    && size < threshold) ||
-			(isdigit(parameter.size[0])  && size == threshold))
-			successeful_parameters++;
-
+		verify_size(&successful_parameters, full_path, FULL_SIZE_OF_FILE, parameter.size);
 	}
 
-	if (parameter.quantity == successeful_parameters)
-		print_file(full_path, depth);
+	if (parameter.quantity == successful_parameters)
+		printf("%s\n", full_path);
 
 }
 
