@@ -121,7 +121,7 @@ int main(int argv, char *argc[]) {
 	parameter.test = false;
 	parameter.quantity = 0;
 	parameter.ou = false;
-	paramter.color = false;
+	parameter.color = false;
 
 	if (argv < 2) {
 		fprintf(stderr, "The path needs to be specified!\n");
